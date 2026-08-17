@@ -1,4 +1,3 @@
-using financeAPI.Models;
 using financeAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using financeAPI.DTOs;
@@ -9,16 +8,19 @@ namespace financeAPI.Services
     {
         public async Task<IEnumerable<BookDto>> GetBooks()
         {
-            var books = await context.Books.ToListAsync();
-            var booksDto = new BookDto()
-            {
-                Id = books.First(x => x.Id )
-                Title = 
-            };
-            return booksDto;
+            return await context.Books
+                .AsNoTracking()
+                .Select(book => new BookDto
+                {
+                    Id = book.Id,
+                    Title = book.Title,
+                    Author = book.Author,
+                    Description = book.Description
+                })
+                .ToListAsync();
         }
 
-        public Task<Book> CreateBook(Book book)
+        public Task<BookDto> CreateBook(BookDto book)
         {
             throw new NotImplementedException();
         }
@@ -28,13 +30,13 @@ namespace financeAPI.Services
             throw new NotImplementedException();
         }
 
-        public Task<Book> GetBookByID(int id)
+        public Task<BookDto> GetBookByID(int id)
         {
             throw new NotImplementedException();
         }
 
 
-        public Task<Book> UpdateBook(Book book)
+        public Task<BookDto> UpdateBook(BookDto book)
         {
             throw new NotImplementedException();
         }
