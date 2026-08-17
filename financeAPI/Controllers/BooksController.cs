@@ -1,5 +1,4 @@
 using financeAPI.DTOs;
-using financeAPI.Models;
 using financeAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 

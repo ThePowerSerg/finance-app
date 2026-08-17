@@ -1,7 +1,6 @@
 using financeAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using financeAPI.DTOs;
-using financeAPI.Models;
 
 namespace financeAPI.Services
 {
@@ -20,17 +19,6 @@ namespace financeAPI.Services
                 })
                 .ToListAsync();
         }
-
-        public Task<BookDto> CreateBook(BookDto book)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeleteBook(int id)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<BookDto?> GetBookByID(int id)
         {
             return await context.Books
@@ -45,7 +33,14 @@ namespace financeAPI.Services
                 })
                 .SingleOrDefaultAsync();
         }
-
+        public Task<BookDto> CreateBook(BookDto book)
+        {
+            throw new NotImplementedException();
+        }
+        public void DeleteBook(int id)
+        {
+            throw new NotImplementedException();
+        }
         public Task<BookDto> UpdateBook(BookDto book)
         {
             throw new NotImplementedException();
