@@ -1,9 +1,23 @@
 using financeAPI.Models;
+using financeAPI.Data;
+using Microsoft.EntityFrameworkCore;
+using financeAPI.DTOs;
 
 namespace financeAPI.Services
 {
-    public class BookService : IBookService
+    public class BookService(AppDbContext context) : IBookService
     {
+        public async Task<IEnumerable<BookDto>> GetBooks()
+        {
+            var books = await context.Books.ToListAsync();
+            var booksDto = new BookDto()
+            {
+                Id = books.First(x => x.Id )
+                Title = 
+            };
+            return booksDto;
+        }
+
         public Task<Book> CreateBook(Book book)
         {
             throw new NotImplementedException();
@@ -19,10 +33,6 @@ namespace financeAPI.Services
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Book>> GetBooks()
-        {
-            throw new NotImplementedException();
-        }
 
         public Task<Book> UpdateBook(Book book)
         {

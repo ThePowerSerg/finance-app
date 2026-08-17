@@ -1,13 +1,13 @@
-using financeAPI.Models;
+using financeAPI.DTOs;
 
 namespace financeAPI.Services
 {
     public interface IBookService
     {
-        Task<IEnumerable<Book>> GetBooks();
-        Task<Book> GetBookByID(int id);
-        Task<Book> CreateBook(Book book);
-        Task<Book> UpdateBook(Book book);
+        Task<IEnumerable<BookDto>> GetBooks();
+        Task<BookDto> GetBookByID(int id);
+        Task<BookDto> CreateBook(BookDto book);
+        Task<BookDto> UpdateBook(BookDto book);
         void DeleteBook(int id);
     }
 }
