@@ -1,3 +1,4 @@
+using financeAPI.DTOs;
 using financeAPI.Models;
 using financeAPI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace financeAPI.Controllers
     public class BooksController(IBookService bookService) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Book>>> Get()
+        public async Task<ActionResult<IEnumerable<BookDto>>> Get()
         {
             var books = await bookService.GetBooks();
             return Ok(books);
@@ -17,7 +18,7 @@ namespace financeAPI.Controllers
 
         [HttpGet("{id}")]
         // Get request by Id 
-        public async Task<ActionResult<Book>> GetById(int id)
+        public async Task<ActionResult<BookDto>> GetById(int id)
         {
             var book = await bookService.GetBookByID(id);
 
