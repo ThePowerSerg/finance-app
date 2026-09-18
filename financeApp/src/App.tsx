@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Book } from "./models/book";
 import LearningResources from "./Components/LearningResources";
 import { Container, Typography } from "@mui/material";
+// import animation from "./assets/images/animation1.svg";
 
 function App() {
   // useState hook keeps track of state changes and accepts a variable and a function
@@ -31,6 +32,11 @@ function App() {
         <Typography variant="h4" color="primary">
           FinAlysis
         </Typography>
+        {/* <img
+          src={animation}
+          style={{ width: "40%", height: "40%" }}
+          alt="animation"
+        /> */}
         <LearningResources books={books} addBook={addBook} />
       </Container>
     </>
