@@ -12,6 +12,7 @@ const revealName = keyframes`
 function App() {
   const [animationLoaded, setAnimationLoaded] = useState(false);
   const [nameVisible, setNameVisible] = useState(false);
+  const [periodSettled, setPeriodSettled] = useState(false);
   const [playbackId, setPlaybackId] = useState<string | null>(null);
   const heroRef = useRef<HTMLElement>(null);
   const periodRef = useRef<HTMLSpanElement>(null);
@@ -25,6 +26,7 @@ function App() {
     // Restart both the SVG and CSS timelines after mounting or a Vite refresh.
     setAnimationLoaded(false);
     setNameVisible(false);
+    setPeriodSettled(false);
     setPeriodPosition(null);
     setPlaybackId(crypto.randomUUID());
   }, []);
@@ -83,6 +85,11 @@ function App() {
             src={`${animation}?playback=${playbackId}`}
             alt=""
             onLoad={() => setAnimationLoaded(true)}
+            onTransitionEnd={(event) => {
+              if (periodPosition && event.propertyName === "transform") {
+                setPeriodSettled(true);
+              }
+            }}
             sx={{
               position: "absolute",
               left: periodPosition?.left ?? "50%",
@@ -103,16 +110,17 @@ function App() {
             key={`title-${playbackId}`}
             id="hero-title"
             component="h1"
-            aria-label="FinApp."
+            aria-label="Futures.ai"
             onAnimationEnd={(event) => {
-              if (event.animationName === revealName.name) {
+              if (event.target === event.currentTarget && event.animationName === revealName.name) {
                 setNameVisible(true);
               }
             }}
             sx={{
               color: "#206aff",
               fontWeight: 700,
-              fontSize: { xs: "3.5rem", md: "5rem" },
+              fontSize: { xs: "clamp(1.75rem, 8vw, 3.5rem)", md: "5rem" },
+              whiteSpace: "nowrap",
               lineHeight: 1.1,
               opacity: 0,
               animation: animationLoaded
@@ -120,7 +128,7 @@ function App() {
                 : "none",
             }}
           >
-            FinApp
+            Futures
             <Box
               component="span"
               ref={periodRef}
@@ -133,6 +141,16 @@ function App() {
                 verticalAlign: "baseline",
               }}
             />
+            <Box
+              component="span"
+              sx={{
+                display: "inline-block",
+                opacity: 0,
+                animation: periodSettled ? `${revealName} 0.5s ease-out forwards` : "none",
+              }}
+            >
+              ai
+            </Box>
           </Typography>
         </Box>
       </Container>
