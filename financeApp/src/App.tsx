@@ -27,11 +27,13 @@ const swoopIn = keyframes`
 
 function App() {
   const [animationLoaded, setAnimationLoaded] = useState(false);
+  const [nameVisible, setNameVisible] = useState(false);
   const [playbackId, setPlaybackId] = useState<string | null>(null);
 
   useEffect(() => {
     // Restart both the SVG and CSS timelines after mounting or a Vite refresh.
     setAnimationLoaded(false);
+    setNameVisible(false);
     setPlaybackId(crypto.randomUUID());
   }, []);
 
@@ -58,7 +60,7 @@ function App() {
             boxShadow: "0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06)",
           }}
         >
-          {playbackId !== null && <Box
+          {playbackId !== null && !nameVisible && <Box
             key={`circle-${playbackId}`}
             component="img"
             src={`${animation}?playback=${playbackId}`}
@@ -84,6 +86,11 @@ function App() {
             key={`title-${playbackId}`}
             id="hero-title"
             component="h1"
+            onAnimationEnd={(event) => {
+              if (event.animationName === swoopIn.name) {
+                setNameVisible(true);
+              }
+            }}
             sx={{
               color: "#206aff",
               fontWeight: 700,
