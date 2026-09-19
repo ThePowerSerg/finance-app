@@ -2,8 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Box, Container, CssBaseline, Typography, keyframes } from "@mui/material";
 import animation from "./assets/images/animation1.svg";
 
-// The SVG's last shape starts at 1.733332s and runs for four seconds.
-const loopEnd = 5.733332;
+// The SVG's last shape starts at 1.516665s and runs for 3.5 seconds.
+const loopEnd = 5.016665;
 const revealName = keyframes`
   from { opacity: 0; transform: scale(0.85); }
   to { opacity: 1; transform: scale(1); }
