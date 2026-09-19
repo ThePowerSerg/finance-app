@@ -4,25 +4,9 @@ import animation from "./assets/images/animation1.svg";
 
 // The SVG's last shape starts at 1.733332s and runs for four seconds.
 const loopEnd = 5.733332;
-const moveDuration = 1;
-
-const moveCircle = keyframes`
-  from {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  to {
-    left: calc(100% - 48px);
-    top: calc(100% - 48px);
-    transform: translate(-55.833333%, -79.907407%) scale(0.65);
-  }
-`;
-
-const swoopIn = keyframes`
-  0% { opacity: 0; transform: translate(-100px, 60px) rotate(-12deg) scale(0.85); }
-  75% { opacity: 1; transform: translate(8px, -6px) rotate(2deg) scale(1.03); }
-  100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+const revealName = keyframes`
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
 `;
 
 function App() {
@@ -71,15 +55,10 @@ function App() {
               left: "50%",
               top: "50%",
               transform: "translate(-50%, -50%)",
-              // The final circle is centered at (603, 863) in the 1080px SVG.
-              transformOrigin: "55.833333% 79.907407%",
               display: "block",
               width: "min(100%, 36svh)",
               maxWidth: 400,
               height: "auto",
-              animation: animationLoaded
-                ? `${moveCircle} ${moveDuration}s cubic-bezier(0.4, 0, 0.2, 1) ${loopEnd}s forwards`
-                : "none",
             }}
           />}
           <Typography
@@ -87,7 +66,7 @@ function App() {
             id="hero-title"
             component="h1"
             onAnimationEnd={(event) => {
-              if (event.animationName === swoopIn.name) {
+              if (event.animationName === revealName.name) {
                 setNameVisible(true);
               }
             }}
@@ -98,7 +77,7 @@ function App() {
               lineHeight: 1.1,
               opacity: 0,
               animation: animationLoaded
-                ? `${swoopIn} 0.9s ease-out ${loopEnd + moveDuration}s forwards`
+                ? `${revealName} 0.9s ease-out ${loopEnd}s forwards`
                 : "none",
             }}
           >
