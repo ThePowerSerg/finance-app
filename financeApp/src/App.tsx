@@ -2,8 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Box, Container, CssBaseline, Typography, keyframes } from "@mui/material";
 import animation from "./assets/images/animation1.svg";
 
-// The SVG's last shape starts at 1.516665s and runs for 3.5 seconds.
-const loopEnd = 5.016665;
+// The SVG's last shape starts at 1.299999s and runs for three seconds.
+const loopEnd = 4.299999;
 const revealName = keyframes`
   from { opacity: 0; transform: scale(0.85); }
   to { opacity: 1; transform: scale(1); }
@@ -110,7 +110,7 @@ function App() {
             key={`title-${playbackId}`}
             id="hero-title"
             component="h1"
-            aria-label="Futures.ai"
+            aria-label="Trade.ai"
             onAnimationEnd={(event) => {
               if (event.target === event.currentTarget && event.animationName === revealName.name) {
                 setNameVisible(true);
@@ -128,7 +128,7 @@ function App() {
                 : "none",
             }}
           >
-            Futures
+            Trade
             <Box
               component="span"
               ref={periodRef}
