@@ -1,19 +1,34 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Box, Container, Typography, keyframes } from "@mui/material";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { Box, Typography, keyframes, useMediaQuery } from "@mui/material";
 import animation from "../assets/images/animation1.svg";
 
-// The SVG's last shape starts at 1.083332s and runs for 2.5 seconds.
-const loopEnd = 3.583332;
+// Timing and geometry must match animation1.svg's final frame.
+const SVG_END_SECONDS = 1.083332 + 2.5;
+const SVG_VIEWBOX_SIZE = 1080;
+const SVG_CIRCLE_DIAMETER = 198.6;
+const SVG_CIRCLE_CENTER_Y = 863;
+const CIRCLE_OFFSET_PERCENT = (SVG_CIRCLE_CENTER_Y / SVG_VIEWBOX_SIZE) * 100;
+
+// Shared entrance animation for the name and its final suffix.
 const revealName = keyframes`
   from { opacity: 0; transform: scale(0.85); }
   to { opacity: 1; transform: scale(1); }
 `;
 
-export default function Animation() {
-  const [animationLoaded, setAnimationLoaded] = useState(false);
-  const [nameVisible, setNameVisible] = useState(false);
-  const [periodSettled, setPeriodSettled] = useState(false);
+// A single phase keeps the sequential animation states mutually exclusive.
+type AnimationPhase = "loading" | "revealing" | "moving" | "complete" | "static";
+type AnimationProps = { headingComponent?: "h1" | "h2" | "h3" };
+
+export default function Animation({ headingComponent = "h2" }: AnimationProps) {
+  // Instance identity, motion preference, and playback state.
+  const titleId = useId();
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
+  const [phase, setPhase] = useState<AnimationPhase>("loading");
   const [playbackId, setPlaybackId] = useState<string | null>(null);
+  const showStatic = reducedMotion || phase === "static";
+  const shouldPosition = !showStatic && (phase === "moving" || phase === "complete");
+
+  // DOM references and the SVG position relative to the hero section.
   const heroRef = useRef<HTMLElement>(null);
   const periodRef = useRef<HTMLSpanElement>(null);
   const [periodPosition, setPeriodPosition] = useState<{
@@ -22,19 +37,19 @@ export default function Animation() {
     width: number;
   } | null>(null);
 
+  // Restart on mount, Vite refresh, or a motion-preference change.
+  // A new image URL restarts the SVG's internal timeline as well as the CSS.
   useEffect(() => {
-    // Restart both the SVG and CSS timelines after mounting or a Vite refresh.
-    setAnimationLoaded(false);
-    setNameVisible(false);
-    setPeriodSettled(false);
+    setPhase("loading");
     setPeriodPosition(null);
-    setPlaybackId(crypto.randomUUID());
-  }, []);
+    setPlaybackId(reducedMotion ? null : crypto.randomUUID());
+  }, [reducedMotion]);
 
+  // Measure the period after the heading appears, then track responsive resizing.
   useLayoutEffect(() => {
     const hero = heroRef.current;
     const period = periodRef.current;
-    if (!nameVisible || !hero || !period) return;
+    if (!shouldPosition || !hero || !period) return;
 
     const positionCircle = () => {
       const heroBounds = hero.getBoundingClientRect();
@@ -50,8 +65,7 @@ export default function Animation() {
           heroBounds.top -
           hero.clientTop +
           dotBounds.height / 2,
-        // The final SVG circle has a diameter of 198.6 in its 1080-unit viewBox.
-        width: (dotBounds.width * 1080) / 198.6,
+        width: (dotBounds.width * SVG_VIEWBOX_SIZE) / SVG_CIRCLE_DIAMETER,
       });
     };
 
@@ -61,115 +75,120 @@ export default function Animation() {
     observer.observe(period);
     if (period.parentElement) observer.observe(period.parentElement);
     return () => observer.disconnect();
-  }, [nameVisible]);
+  }, [shouldPosition]);
 
+  // The parent owns the page landmark and outer spacing.
   return (
-    <>
-      <Container component="main" maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+    <Box
+      component="section"
+      ref={heroRef}
+      aria-labelledby={titleId}
+      sx={{
+        position: "relative",
+        overflow: "hidden",
+        minHeight: "50svh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        p: { xs: 3, md: 4 },
+        bgcolor: "common.white",
+        border: "1px solid",
+        borderColor: "grey.200",
+        borderRadius: 3,
+        boxShadow:
+          "0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06)",
+      }}
+    >
+      {/* Decorative SVG: load failures reveal a static, complete logo. */}
+      {!showStatic && playbackId !== null && (
         <Box
-          component="section"
-          ref={heroRef}
-          aria-labelledby="hero-title"
+          key={`circle-${playbackId}`}
+          component="img"
+          src={`${animation}?playback=${playbackId}`}
+          alt=""
+          onLoad={() => setPhase((current) => current === "loading" ? "revealing" : current)}
+          onError={() => setPhase("static")}
+          onTransitionEnd={(event) => {
+            if (phase === "moving" && periodPosition && event.propertyName === "transform") {
+              setPhase("complete");
+            }
+          }}
           sx={{
-            position: "relative",
-            overflow: "hidden",
-            minHeight: "50svh",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            p: { xs: 3, md: 4 },
-            bgcolor: "common.white",
-            border: "1px solid",
-            borderColor: "grey.200",
-            borderRadius: 3,
-            boxShadow:
-              "0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06)",
+            position: "absolute",
+            left: periodPosition?.left ?? "50%",
+            top: periodPosition?.top ?? "50%",
+            // Align the SVG circle center with the measured period.
+            transform: periodPosition
+              ? `translate(-50%, -${CIRCLE_OFFSET_PERCENT}%)`
+              : "translate(-50%, -50%)",
+            display: "block",
+            width: periodPosition?.width ?? "min(100%, 36svh)",
+            maxWidth: 400,
+            height: "auto",
+            pointerEvents: "none",
+            transition:
+              "left 0.8s ease-in-out, top 0.8s ease-in-out, width 0.8s ease-in-out, transform 0.8s ease-in-out",
+          }}
+        />
+      )}
+      {/* Heading: reveal after the SVG finishes, then move its circle. */}
+      <Typography
+        key={`title-${playbackId}`}
+        id={titleId}
+        component={headingComponent}
+        aria-label="Trade.ai"
+        onAnimationEnd={(event) => {
+          if (
+            phase === "revealing" &&
+            event.target === event.currentTarget &&
+            event.animationName === revealName.name
+          ) {
+            setPhase("moving");
+          }
+        }}
+        sx={{
+          color: "#206aff",
+          fontWeight: 700,
+          fontSize: { xs: "clamp(1.75rem, 8vw, 3.5rem)", md: "5rem" },
+          whiteSpace: "nowrap",
+          lineHeight: 1.1,
+          opacity: showStatic || phase === "moving" || phase === "complete" ? 1 : 0,
+          animation: !showStatic && phase === "revealing"
+            ? `${revealName} 0.9s ease-out ${SVG_END_SECONDS}s forwards`
+            : "none",
+        }}
+      >
+        Trade
+        {/* Reserve the period space; paint it directly for static playback. */}
+        <Box
+          component="span"
+          ref={periodRef}
+          aria-hidden="true"
+          sx={{
+            display: "inline-block",
+            width: "0.14em",
+            height: "0.14em",
+            borderRadius: "50%",
+            bgcolor: showStatic ? "currentColor" : "transparent",
+            ml: "0.04em",
+            verticalAlign: "baseline",
+          }}
+        />
+        {/* Reveal the suffix once the circle reaches the period. */}
+        <Box
+          component="span"
+          sx={{
+            display: "inline-block",
+            opacity: showStatic ? 1 : 0,
+            animation: !showStatic && phase === "complete"
+              ? `${revealName} 0.5s ease-out forwards`
+              : "none",
           }}
         >
-          {playbackId !== null && (
-            <Box
-              key={`circle-${playbackId}`}
-              component="img"
-              src={`${animation}?playback=${playbackId}`}
-              alt=""
-              onLoad={() => setAnimationLoaded(true)}
-              onTransitionEnd={(event) => {
-                if (periodPosition && event.propertyName === "transform") {
-                  setPeriodSettled(true);
-                }
-              }}
-              sx={{
-                position: "absolute",
-                left: periodPosition?.left ?? "50%",
-                top: periodPosition?.top ?? "50%",
-                // Final circle center: (540, 863) in the SVG viewBox.
-                transform: periodPosition
-                  ? "translate(-50%, -79.907407%)"
-                  : "translate(-50%, -50%)",
-                display: "block",
-                width: periodPosition?.width ?? "min(100%, 36svh)",
-                maxWidth: 400,
-                height: "auto",
-                pointerEvents: "none",
-                transition:
-                  "left 0.8s ease-in-out, top 0.8s ease-in-out, width 0.8s ease-in-out, transform 0.8s ease-in-out",
-              }}
-            />
-          )}
-          <Typography
-            key={`title-${playbackId}`}
-            id="hero-title"
-            component="h1"
-            aria-label="Trade.ai"
-            onAnimationEnd={(event) => {
-              if (
-                event.target === event.currentTarget &&
-                event.animationName === revealName.name
-              ) {
-                setNameVisible(true);
-              }
-            }}
-            sx={{
-              color: "#206aff",
-              fontWeight: 700,
-              fontSize: { xs: "clamp(1.75rem, 8vw, 3.5rem)", md: "5rem" },
-              whiteSpace: "nowrap",
-              lineHeight: 1.1,
-              opacity: 0,
-              animation: animationLoaded
-                ? `${revealName} 0.9s ease-out ${loopEnd}s forwards`
-                : "none",
-            }}
-          >
-            Trade
-            <Box
-              component="span"
-              ref={periodRef}
-              aria-hidden="true"
-              sx={{
-                display: "inline-block",
-                width: "0.14em",
-                height: "0.14em",
-                ml: "0.04em",
-                verticalAlign: "baseline",
-              }}
-            />
-            <Box
-              component="span"
-              sx={{
-                display: "inline-block",
-                opacity: 0,
-                animation: periodSettled
-                  ? `${revealName} 0.5s ease-out forwards`
-                  : "none",
-              }}
-            >
-              ai
-            </Box>
-          </Typography>
+          ai
         </Box>
-      </Container>
-    </>
+      </Typography>
+    </Box>
   );
 }
