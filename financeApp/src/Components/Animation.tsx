@@ -137,7 +137,7 @@ export default function Animation({ headingComponent = "h2" }: AnimationProps) {
         key={`title-${playbackId}`}
         id={titleId}
         component={headingComponent}
-        aria-label="Trade.ai"
+        aria-label="Futures.ai"
         onAnimationEnd={(event) => {
           if (
             phase === "revealing" &&
@@ -159,7 +159,7 @@ export default function Animation({ headingComponent = "h2" }: AnimationProps) {
             : "none",
         }}
       >
-        Trade
+        Futures
         {/* Reserve the period space; paint it directly for static playback. */}
         <Box
           component="span"
