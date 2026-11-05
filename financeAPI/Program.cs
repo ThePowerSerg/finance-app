@@ -1,8 +1,15 @@
 using financeAPI.Data;
 using financeAPI.Services;
 using Microsoft.EntityFrameworkCore;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Console.WriteLine("Loading configuration from Azure Key Vault...");
+builder.Configuration.AddAzureKeyVault(
+    new Uri("https://finance-app.vault.azure.net/"),
+    new DefaultAzureCredential());
+Console.WriteLine("Azure Key Vault configuration loaded.");
 
 // Add services to the container.
 builder.Services.AddDbContext<AppDbContext>(options =>
