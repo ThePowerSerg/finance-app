@@ -9,24 +9,12 @@ namespace financeAPI.Controllers
     // Expose this controller at /api/quotes with ASP.NET Core API conventions.
     [ApiController]
     [Route("api/[controller]")]
-    public class QuotesController : ControllerBase
+    public class QuotesController(IHttpClientFactory factory, IConfiguration configuration) : ControllerBase
     {
-        // Dependencies for outgoing HTTP calls and application configuration.
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
-
-        // ASP.NET Core supplies these dependencies through constructor injection.
-        // Program.cs registers HttpClient; IConfiguration is provided by the host.
-        public QuotesController(HttpClient httpClient, IConfiguration configuration)
-        {
-            _httpClient = httpClient;
-            _configuration = configuration;
-        }
-
-        // GET /api/quotes?symbol=MSFT; an omitted symbol defaults to AAPL.
+        // GET /api/quotes?symbol=MSFT
         // The cancellation token tracks cancellation of the incoming request.
         [HttpGet]
-        public async Task<IActionResult> GetQuote([FromQuery] string symbol = "AAPL",
+        public async Task<IActionResult> GetQuote([FromQuery] string? symbol,
             CancellationToken cancellationToken = default)
         {
             // Accept one nonblank symbol; comma-separated batch requests are unsupported.
@@ -35,7 +23,7 @@ namespace financeAPI.Controllers
 
             // .NET maps the environment variable TwelveData__ApiKey to this key.
             // Stop before contacting the provider if configuration is missing.
-            var apiKey = _configuration["TwelveData:ApiKey"];
+            var apiKey = configuration["TwelveData:ApiKey"];
             if (string.IsNullOrWhiteSpace(apiKey))
                 return Problem("Twelve Data API key is not configured.", statusCode: 500);
 
@@ -49,7 +37,9 @@ namespace financeAPI.Controllers
             {
                 // Send the request asynchronously and map upstream HTTP failures to 502.
                 // Dispose the response after reading it; propagate caller cancellation.
-                using var response = await _httpClient.SendAsync(request, cancellationToken);
+                using var client = factory.CreateClient();
+
+                using var response = await client.SendAsync(request, cancellationToken);
                 if (!response.IsSuccessStatusCode)
                     return Problem("Twelve Data could not retrieve the quote.", statusCode: 502);
 

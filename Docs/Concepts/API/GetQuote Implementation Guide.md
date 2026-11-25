@@ -64,8 +64,8 @@ See [Twelve Data API Key Setup](Twelve%20Data%20API%20Key%20Setup.md) for setup,
 
 ## Request flow
 
-1. Bruno or the frontend sends `GET /api/quotes?symbol=MSFT`. Omitting `symbol` uses `AAPL`.
-2. The method rejects whitespace-only symbols and comma-separated lists with HTTP 400. This is basic single-symbol validation, not a check that a ticker exists.
+1. Bruno or the frontend sends `GET /api/quotes?symbol=MSFT`. The required `symbol` parameter contains the security's ticker symbol.
+2. The method returns HTTP 400 for missing or blank symbols and comma-separated lists.
 3. The controller reads the API key and verifies it is present.
 4. The symbol is trimmed and URL-encoded before being placed in the Twelve Data URL.
 5. `HttpClient` sends the request asynchronously with the cancellation token.
